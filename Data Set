@@ -1,15 +1,20 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.dates as mdates
 
 # Load the COVID-19 dataset
 df = pd.read_csv('time_series_covid19_confirmed_US.csv')
+
+# Extract the date columns (they start from the 12th column onward)
+dates = pd.to_datetime(df.columns[11:], format='%m/%d/%y')  # Convert columns to datetime format
 
 # 1. What are the column names of the dataset?
 print("Column names:", df.columns)
 
 # 2. What is the structure of the dataset? (data types of each column)
 print("\nDataset structure:")
-print(df.info())
+df.info()
 
 # 3. What is the summary statistics of numerical columns?
 print("\nSummary statistics:")
@@ -114,46 +119,50 @@ print("\nMinimum daily percentage increase:", df['Percentage_Change'].min())
 # 30. How many records show a decrease in confirmed cases over time?
 print("\nRecords with decreasing confirmed cases:", len(df[df['Percentage_Change'] < 0]))
 
-# Plots
+# --- PLOTS ---
 
-Line Plot of Total Confirmed Cases Over Time:
-
+# Plot 1: Line Plot of Total Confirmed COVID-19 Cases Over Time
 total_cases_over_time = df.iloc[:, 11:].sum()
 plt.figure(figsize=(10, 5))
-plt.plot(total_cases_over_time.index, total_cases_over_time.values)
+plt.plot(dates, total_cases_over_time.values)
 plt.title('Total Confirmed COVID-19 Cases Over Time')
 plt.xlabel('Date')
 plt.ylabel('Confirmed Cases')
 plt.xticks(rotation=45)
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))  # Show ticks every 2 months
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))  # Show Year-Month
+plt.tight_layout()
 plt.show()
+plt.close()
 
-Bar Plot of Total Confirmed Cases by State:
-
+# Plot 2: Bar Plot of Total Confirmed Cases by State
 cases_by_state = df.groupby('Province_State').sum().iloc[:, 10:].sum(axis=1)
-cases_by_state.plot(kind='bar', figsize=(10, 5))
+plt.figure(figsize=(10, 5))
+cases_by_state.plot(kind='bar')
 plt.title('Total Confirmed Cases by State')
 plt.xlabel('State')
 plt.ylabel('Total Confirmed Cases')
+plt.tight_layout()
 plt.show()
+plt.close()
 
-Heatmap of Confirmed Cases by State and Date:
-
-import seaborn as sns
+# Plot 3: Heatmap of Confirmed Cases by State and Date
 state_case_matrix = df.groupby('Province_State').sum().iloc[:, 10:]
 plt.figure(figsize=(12, 8))
 sns.heatmap(state_case_matrix, cmap='YlOrRd')
 plt.title('Heatmap of Confirmed Cases by State and Date')
 plt.xlabel('Date')
 plt.ylabel('State')
+plt.tight_layout()
 plt.show()
+plt.close()
 
-
-Histogram of Daily Percentage Changes in Confirmed Cases:
-
+# Plot 4: Histogram of Daily Percentage Changes in Confirmed Cases
 plt.figure(figsize=(8, 5))
 plt.hist(df['Percentage_Change'], bins=30, color='blue', edgecolor='black')
 plt.title('Distribution of Daily Percentage Change in Confirmed Cases')
 plt.xlabel('Percentage Change')
 plt.ylabel('Frequency')
+plt.tight_layout()
 plt.show()
-
+plt.close()
