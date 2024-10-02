@@ -119,6 +119,90 @@ print("\nMinimum daily percentage increase:", df['Percentage_Change'].min())
 # 30. How many records show a decrease in confirmed cases over time?
 print("\nRecords with decreasing confirmed cases:", len(df[df['Percentage_Change'] < 0]))
 
+# 31:What is the total number of confirmed cases per month across all states?
+monthly_cases = df.groupby('Month').sum().iloc[:, 10:].sum()
+print("\nTotal confirmed cases per month:", monthly_cases)
+
+# 32: How does the number of confirmed cases change seasonally?
+seasonal_cases = df.groupby('Season').sum().iloc[:, 10:].sum()
+print("\nSeasonal confirmed cases:", seasonal_cases)
+
+# 33:Which counties have the highest average daily growth rate in confirmed cases?
+df['Daily_Growth'] = df.iloc[:, 11:].pct_change(axis=1).mean(axis=1)
+top_counties = df.groupby('Admin2')['Daily_Growth'].mean().nlargest(10)
+print("\nTop 10 counties with highest average daily growth rate:", top_counties)
+
+# 34: What is the distribution of confirmed cases across different latitude and longitude ranges?
+lat_long_distribution = df.groupby(['Lat', 'Long_']).sum().iloc[:, 10:].sum()
+print("\nDistribution of confirmed cases by latitude and longitude:", lat_long_distribution)
+
+# 35: Which states had the fastest increase in confirmed cases during the first month of the pandemic?
+first_month_cases = df.iloc[:, 11:41].sum().nlargest(5)
+print("\nStates with the fastest increase in confirmed cases during the first month:", first_month_cases)
+
+# 36: What is the trend in confirmed cases over time for the top 5 most affected states?
+top_states = df.groupby('Province_State').sum().iloc[:, 10:].sum(axis=1).nlargest(5)
+print("\nTop 5 states with the highest confirmed cases:", top_states)
+
+# 37: Which counties had a confirmed case count of over 100,000 by March 2021?
+df_march2021 = df[df['3/1/21'] > 100000]
+print("\nCounties with confirmed cases over 100,000 by March 2021:", df_march2021['3/1/21'])
+
+# 38: What is the correlation between population density and confirmed cases?
+population_cases_corr = df['Population'].corr(df.iloc[:, 11:].sum(axis=1))
+print("\nCorrelation between population density and confirmed cases:", population_cases_corr)
+
+# 39: How do confirmed cases correlate with time in each state?
+cases_corr = df.iloc[:, 11:].corr().mean().mean()
+print("\nCorrelation of confirmed cases over time across all states:", cases_corr)
+
+# 40: What are the top 10 counties with the most confirmed cases on the last day in the dataset?
+top_10_counties = df.groupby('Admin2').sum().iloc[:, -1].nlargest(10)
+print("\nTop 10 counties with the most confirmed cases:", top_10_counties)
+
+# 41: What is the cumulative number of confirmed cases per region (Midwest, South, etc.)?
+df_region = df.groupby('Region').sum().iloc[:, 10:].sum()
+print("\nCumulative confirmed cases per region:", df_region)
+
+# 42:  What is the correlation between the latitude and confirmed cases?
+lat_cases_corr = df['Lat'].corr(df.iloc[:, 11:].sum(axis=1))
+print("\nCorrelation between latitude and confirmed cases:", lat_cases_corr)
+
+# 43:  Which states had the lowest confirmed cases throughout the entire dataset period?
+low_states = df.groupby('Province_State').sum().iloc[:, 10:].sum(axis=1).nsmallest(10)
+print("\nStates with the lowest confirmed cases:", low_states)
+
+# 44: What is the moving average of confirmed cases in California for a 7-day period?
+ca_cases_ma = df[df['Province_State'] == 'California'].iloc[:, 11:].mean().rolling(window=7).mean()
+print("\n7-day moving average of confirmed cases in California:", ca_cases_ma)
+
+# 45: What is the weekly percentage change in confirmed cases for New York?
+ny_cases = df[df['Province_State'] == 'New York'].iloc[:, 11:].pct_change(axis=1).mean(axis=1).resample('W').mean()
+print("\nWeekly percentage change in confirmed cases for New York:", ny_cases)
+
+# 46: What is the rate of confirmed cases in counties with a population under 50,000?
+small_counties_cases = df[df['Population'] < 50000].iloc[:, -1]
+print("\nConfirmed cases in counties with population under 50,000:", small_counties_cases)
+
+# 47: What is the average number of confirmed cases for each state across all months?
+avg_cases_by_state = df.groupby('Province_State').mean().iloc[:, 10:].mean(axis=1)
+print("\nAverage confirmed cases per state across all months:", avg_cases_by_state)
+
+#48: Which 10 states experienced the highest peak in daily confirmed cases?
+peak_daily_cases = df.iloc[:, 11:].max(axis=1).nlargest(10)
+print("\nTop 10 states with the highest peak in daily confirmed cases:", peak_daily_cases)
+
+# 49. What is the relationship between time and confirmed cases in Florida?
+fl_cases = df[df['Province_State'] == 'Florida'].iloc[:, 11:].sum()
+print("\nConfirmed cases in Florida over time:", fl_cases)
+
+# 50. What is the exponential growth rate of confirmed cases in the first three months of the pandemic?
+first_three_months_growth = df.iloc[:, 11:101].sum().pct_change().mean()
+print("\nExponential growth rate of confirmed cases in the first three months:", first_three_months_growth)
+
+
+
+
 # --- PLOTS ---
 
 # Plot 1: Line Plot of Total Confirmed COVID-19 Cases Over Time
@@ -166,3 +250,117 @@ plt.ylabel('Frequency')
 plt.tight_layout()
 plt.show()
 plt.close()
+
+#PLOT 5: Monthly Total Confirmed Cases Across All States (Line Plot):
+
+df['Month'] = pd.to_datetime(df.columns[11:], format='%m/%d/%y').month
+monthly_cases = df.groupby('Month').sum().iloc[:, 10:]
+monthly_cases.T.plot(figsize=(10, 6))
+plt.title('Monthly Total Confirmed Cases Across All States')
+plt.xlabel('Date')
+plt.ylabel('Total Confirmed Cases')
+plt.show()
+
+#Plot 6: Seasonal Trends in Confirmed Cases (Box Plot):
+df['Season'] = pd.cut(df['Month'], bins=[1, 3, 6, 9, 12], labels=['Winter', 'Spring', 'Summer', 'Fall'])
+sns.boxplot(x='Season', y=df.iloc[:, 11:].sum(), data=df)
+plt.title('Seasonal Trends in Confirmed Cases')
+plt.show()
+
+#PlOT 7: Counties with the Highest Average Daily Growth Rate (Bar Plot):
+df['Daily_Growth'] = df.iloc[:, 11:].pct_change(axis=1).mean(axis=1)
+top_counties = df.groupby('Admin2')['Daily_Growth'].mean().nlargest(10)
+top_counties.plot(kind='bar', figsize=(10, 6))
+plt.title('Counties with Highest Daily Growth Rate')
+plt.show()
+
+
+#plot 8: Counties with the Highest Average Daily Growth Rate (Bar Plot):
+df['Daily_Growth'] = df.iloc[:, 11:].pct_change(axis=1).mean(axis=1)
+top_counties = df.groupby('Admin2')['Daily_Growth'].mean().nlargest(10)
+top_counties.plot(kind='bar', figsize=(10, 6))
+plt.title('Counties with Highest Daily Growth Rate')
+plt.show()
+
+#PLOT 9: Distribution of Confirmed Cases by Latitude and Longitude (Hexbin Plot):
+
+plt.hexbin(df['Lat'], df['Long_'], gridsize=50, cmap='Greens')
+plt.colorbar(label='Total Confirmed Cases')
+plt.title('Distribution of Confirmed Cases by Latitude and Longitude')
+plt.xlabel('Latitude')
+plt.ylabel('Longitude')
+plt.show()
+
+#PLOT 10: Fastest Increase in Confirmed Cases in the First Month (Line Plot)
+first_month_cases = df.iloc[:, 11:41].sum().nlargest(5)
+first_month_cases.T.plot(figsize=(10, 6))
+plt.title('Fastest Increase in Confirmed Cases in the First Month')
+plt.show()
+
+#PLOT 11: Confirmed Cases Trend for Top 5 States (Line Plot):
+top_states = df.groupby('Province_State').sum().iloc[:, 10:].sum(axis=1).nlargest(5)
+df_top_states = df[df['Province_State'].isin(top_states.index)]
+df_top_states.iloc[:, 11:].T.plot(figsize=(12, 6))
+plt.title('Confirmed Cases Over Time for Top 5 States')
+plt.show()
+
+#PLOT 12: Counties with Over 100,000 Confirmed Cases by March 2021 (Bar Plot):
+df_march2021 = df[df['3/1/21'] > 100000]
+df_march2021['3/1/21'].plot(kind='bar', figsize=(10, 6))
+plt.title('Counties with Over 100,000 Confirmed Cases by March 2021')
+plt.show()
+
+
+#PLOT 13: Correlation Between Population Density and Confirmed Cases
+sns.scatterplot(x=df['Population'], y=df.iloc[:, 11:].sum())
+plt.title('Correlation Between Population and Confirmed Cases')
+plt.xlabel('Population')
+plt.ylabel('Confirmed Cases')
+plt.show()
+
+
+#Plot 14: Correlation of Confirmed Cases Over Time in Each State
+
+cases_corr = df.iloc[:, 11:].corr()
+sns.heatmap(cases_corr, cmap='coolwarm')
+plt.title('Correlation of Confirmed Cases Over Time')
+plt.show()
+
+
+#Plot 15: Top 10 Counties with the Most Confirmed Cases
+top_10_counties = df.groupby('Admin2').sum().iloc[:, -1].nlargest(10)
+top_10_counties.plot(kind='bar', figsize=(10, 6))
+plt.title('Top 10 Counties with Most Confirmed Cases')
+plt.show()
+
+#Plot 16: Cumulative Confirmed Cases per Region
+df_region = df.groupby('Region').sum().iloc[:, 10:]
+df_region.T.plot(kind='area', stacked=True, figsize=(10, 6))
+plt.title('Cumulative Confirmed Cases per Region')
+plt.show()
+
+
+#PLOT 17: Latitude vs Confirmed Cases 
+sns.scatterplot(x=df['Lat'], y=df.iloc[:, 11:].sum())
+plt.title('Latitude vs Confirmed Cases')
+plt.show()
+
+
+#PLOT 18: States with Lowest Confirmed Cases
+low_states = df.groupby('Province_State').sum().iloc[:, 10:].sum(axis=1).nsmallest(10)
+low_states.plot(kind='bar', figsize=(10, 6))
+plt.title('States with Lowest Confirmed Cases')
+plt.show()
+
+
+#PLOT 19: Moving Average of Confirmed Cases in California
+
+ca_cases = df[df['Province_State'] == 'California'].iloc[:, 11:].mean()
+ca_cases_ma = ca_cases.rolling(window=7).mean()
+plt.plot(ca_cases_ma)
+plt.title('Moving Average of Confirmed Cases in California')
+plt.show()
+
+
+
+
